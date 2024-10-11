@@ -1,6 +1,6 @@
 # Communicable, Maternal, Neonatal, and Nutritional Disease Burden (CMNN)
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 # Load necessary packages
 pacman::p_load(tidyverse, knitr, here)
 
@@ -8,27 +8,55 @@ pacman::p_load(tidyverse, knitr, here)
 data_cmnn <- read_csv(here("data/burden-of-disease-cmnn.csv"))
 ```
 
-```{r}
-# Filter the dataset to include only the three countries chosen by your group.
-data_cmnn_mini <- "WRITE_YOUR_CODE_HERE"
+```{r, message=FALSE, warning=FALSE}
+# Filter the dataset to include only the three countries chosen by your group. Afghanistan, Bangladesh, and India.
+data_cmnn_mini <- data_cmnn %>%
+  filter(Entity %in% c("Afghanistan", "Bangladesh", "India"))
 ```
 
 ## Table of Estimates for CMNN Burden Over Time
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 # Here render a table for the DALY burden over time for the three countries.
 # You should pivot the data wider to show each country in a separate column.
-data_cmnn_wide <- "WRITE_YOUR_CODE_HERE"
+
+data_cmnn_wide <- data_cmnn_mini %>%
+  pivot_wider(
+    names_from = Entity, 
+    values_from = "DALYs (Disability-Adjusted Life Years) - Communicable, maternal, neonatal, and nutritional diseases - Sex: Both - Age: Age-standardized (Rate)"
+  ) %>%
+  group_by(Year) %>%  # Group by Year to aggregate any multiple entries for the same year
+  summarise(
+    Afghanistan = first(na.omit(Afghanistan)),  # Take the first non-NA value
+    Bangladesh = first(na.omit(Bangladesh)),    # Take the first non-NA value
+    India = first(na.omit(India))               # Take the first non-NA value
+  ) %>%
+  ungroup()
 # Use kable() from the knitr package to render the table.
+kable(data_cmnn_wide)
+
 ```
 
 ## Plot Showing Trends in CMNN Burden Over Time
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 # Here, plot a line graph showing the trend of DALY burden for the chosen countries over time. You can use ggplot2 to create this plot. Each country's line should be a different color.
 # NOTE: Use your long 'mini' data frame for plotting, not the wide data used for the table. 
+
+# Plot the trend of DALY burden over time for Afghanistan, Bangladesh, and India
+ggplot(data_cmnn_mini, aes(x = Year, y = `DALYs (Disability-Adjusted Life Years) - Communicable, maternal, neonatal, and nutritional diseases - Sex: Both - Age: Age-standardized (Rate)`, color = Entity)) +
+  geom_line(size = 1.2) +  # Line thickness for better visibility
+  labs(
+    title = "DALY Burden Trend for CMNN",
+    x = "Year",
+    y = "DALY (Age-Standardized Rate)",
+    color = "Country"
+  ) +
+  theme_minimal() +  # Use a clean theme
+  scale_color_manual(values = c("Afghanistan" = "blue", "Bangladesh" = "green", "India" = "red"))  # Define specific colors for each country
+
 ```
 
 ## Summary of CMNN Burden Findings
 
-Provide a brief analysis based on the data presented in the table and chart. Highlight any significant findings or patterns. About 3 sentences.
+The table and chart show that the DALY burden due to communicable, maternal, neonatal, and nutritional diseases has generally decreased over time for Afghanistan, Bangladesh, and India. However, there are variations in the trends among the countries, with Afghanistan showing a more fluctuating pattern compared to Bangladesh and India. Overall, this decrease indicates improvements in health outcomes related to these diseases.
